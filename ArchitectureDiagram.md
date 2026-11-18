@@ -1,54 +1,35 @@
 # Implemented application architecture
 
-This diagram describes the checked-in React frontend and Express API. Arrows show
-asset delivery, HTTP requests, or internal calls; they do not imply that any
-particular deployment is running.
+The application has three architectural layers: a browser frontend, a REST API,
+and a SQLite data store. Connections show how requests and data move between
+layers, not a sequence of execution steps. This describes the checked-in
+implementation, not a particular running deployment.
 
 ```mermaid
 flowchart LR
-    subgraph Hosting["Frontend hosting alternatives"]
-        Vite["Vite development server :5137"]
-        Nginx["Nginx container :80"]
+    subgraph Frontend["Frontend - browser"]
+        UI["React + TypeScript SPA<br/>Product catalog and admin product UI<br/>Router, auth and theme contexts<br/>Axios HTTP client"]
     end
 
-    subgraph Browser["Browser"]
-        App["React SPA<br/>Router, auth and theme contexts"]
-        Views["Product catalog and admin product UI"]
-        Client["Axios HTTP calls<br/>Configured API base URL"]
-        App --> Views
-        Views --> Client
+    subgraph API["API - Node.js process"]
+        Server["Express REST API<br/>Eight entity route groups<br/>CORS, JSON and error middleware<br/>Repositories and SQL row mapping<br/>Swagger / OpenAPI"]
     end
 
-    subgraph Backend["Node.js API process"]
-        Entry["Express :3000 by default<br/>CORS and JSON middleware"]
-        Routes["Eight entity route groups"]
-        Repos["Entity repositories<br/>SQL and row mapping"]
-        Driver["Shared database connection<br/>better-sqlite3"]
-        Errors["Error-handling middleware"]
-        Swagger["Swagger UI and OpenAPI JSON"]
-        Init["Startup database initialization"]
-        Migrate["Run pending SQL migrations"]
-        Seed["Run SQL seeds unless suppliers exist"]
-
-        Entry --> Routes
-        Routes --> Repos
-        Repos --> Driver
-        Routes -->|"forwarded errors"| Errors
-        Entry --> Swagger
-        Init --> Migrate
-        Migrate --> Seed
-        Migrate --> Driver
-        Seed --> Driver
-        Init -->|"then start listening"| Entry
+    subgraph Data["Data - local to the API"]
+        DB[("SQLite database file<br/>Suppliers and products<br/>Headquarters and branches<br/>Orders and order details<br/>Deliveries and fulfillment links")]
     end
 
-    DB[("SQLite file<br/>./data/app.db by default")]
+    UI <-->|"REST /api/*<br/>HTTP requests and JSON responses"| Server
+    Server <-->|"SQL via better-sqlite3<br/>Queries, writes and results"| DB
 
-    Vite -->|"serve frontend assets"| App
-    Nginx -->|"serve frontend assets"| App
-    Client -->|"HTTP JSON requests"| Entry
-    Driver -->|"SQL reads and writes"| DB
+    style Frontend fill:#eff6ff,stroke:#2563eb,color:#172554
+    style API fill:#f0fdf4,stroke:#16a34a,color:#14532d
+    style Data fill:#fff7ed,stroke:#ea580c,color:#7c2d12
 ```
+
+The frontend talks only to the API, not directly to SQLite. SQLite is an embedded
+database accessed by the API process, not a separate database server. Vite serves
+frontend assets in development; Nginx serves the built frontend in its container.
 
 ## How it works
 
