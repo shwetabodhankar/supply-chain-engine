@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Daily Issue Triage</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <header>
+        <div><h1>Daily Issue Triage</h1><a id="repository" target="_blank" rel="noopener noreferrer">Connecting to GitHub...</a></div>
+        <button id="refresh" type="button">Refresh</button>
+    </header>
+    <form id="filters" aria-label="Issue filters">
+        <label class="search">Search<input id="search" type="search" maxlength="200" placeholder="Title, #number, label, or assignee"></label>
+        <label>Label<select id="label"><option value="">All labels</option></select></label>
+        <label>Assignee<select id="assignee"><option value="">All assignees</option><option value="__unassigned__">Unassigned</option></select></label>
+        <label>Per page<select id="page-size"><option>20</option><option>50</option><option>100</option></select></label>
+        <button type="submit">Apply filters</button>
+    </form>
+    <p class="muted">Open issues only, never pull requests. Search matches all words across issue titles, numbers, labels, and assignees.</p>
+    <p id="metadata-error" role="alert" hidden></p>
+    <p id="error" role="alert" hidden></p>
+    <p id="notice" role="status" hidden></p>
+    <p id="status" role="status" aria-live="polite">Loading open issues...</p>
+    <main id="issues" aria-label="Open issues" aria-busy="true"></main>
+    <nav aria-label="Issue pages">
+        <button id="previous" type="button" disabled>Previous</button>
+        <span id="page">Page 1</span>
+        <button id="next" type="button" disabled>Next</button>
+    </nav>
+    <p class="muted">Uses the local GitHub CLI account. Every edit requires review and confirmation. GitHub remains the source of truth.</p>
+    <dialog id="edit-dialog" aria-labelledby="edit-title">
+        <form id="edit-form">
+            <h2 id="edit-title">Edit issue</h2>
+            <p id="edit-description"></p>
+            <fieldset id="choices"><legend>Choose values</legend></fieldset>
+            <p id="edit-error" role="alert" hidden></p>
+            <div class="buttons"><button id="edit-cancel" type="button">Cancel</button><button id="review" type="submit">Review change</button></div>
+        </form>
+    </dialog>
+    <dialog id="confirm-dialog" aria-labelledby="confirm-title">
+        <h2 id="confirm-title">Confirm GitHub update</h2>
+        <p id="confirm-description"></p>
+        <dl><dt>Current values</dt><dd id="before"></dd><dt>New values</dt><dd id="after"></dd></dl>
+        <p>This changes the live issue on GitHub. Confirmation expires after two minutes.</p>
+        <div class="buttons"><button id="confirm-cancel" type="button">Cancel</button><button id="confirm" type="button">Confirm update</button></div>
+    </dialog>
+</body>
+</html>
