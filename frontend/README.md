@@ -1,5 +1,12 @@
 # React + TypeScript + Vite
 
+## Storefront navigation
+
+Home, Products, and About us highlight the current page with the primary theme
+color and an underline in both light and dark themes. The current link exposes
+`aria-current="page"`; all three links have visible keyboard focus outlines.
+Matching is exact, so Login and Admin pages do not highlight a public link.
+
 ## Storefront product sorting
 
 On `/products`, use **Sort by** to select **Default**, **Name A-Z**,
