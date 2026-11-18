@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useState } from 'react';
@@ -7,6 +7,8 @@ export default function Navigation() {
   const { isLoggedIn, isAdmin, logout } = useAuth();
   const { darkMode, toggleTheme } = useTheme();
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+  const publicLinkClassName = ({ isActive }: { isActive: boolean }) =>
+    `${isActive ? 'text-primary underline underline-offset-4' : darkMode ? 'text-light hover:text-primary' : 'text-gray-700 hover:text-primary'} px-3 py-2 rounded-md text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary`;
 
   return (
     <nav
@@ -27,24 +29,27 @@ export default function Navigation() {
           </div>
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-4">
-              <Link
+              <NavLink
                 to="/"
-                className={`${darkMode ? 'text-light hover:text-primary' : 'text-gray-700 hover:text-primary'} px-3 py-2 rounded-md text-sm font-medium transition-colors`}
+                end
+                className={publicLinkClassName}
               >
                 Home
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 to="/products"
-                className={`${darkMode ? 'text-light hover:text-primary' : 'text-gray-700 hover:text-primary'} px-3 py-2 rounded-md text-sm font-medium transition-colors`}
+                end
+                className={publicLinkClassName}
               >
                 Products
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 to="/about"
-                className={`${darkMode ? 'text-light hover:text-primary' : 'text-gray-700 hover:text-primary'} px-3 py-2 rounded-md text-sm font-medium transition-colors`}
+                end
+                className={publicLinkClassName}
               >
                 About us
-              </Link>
+              </NavLink>
               {isAdmin && (
                 <div className="relative">
                   <button
