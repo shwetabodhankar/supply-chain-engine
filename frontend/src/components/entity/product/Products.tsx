@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../../api/config';
@@ -31,6 +31,7 @@ const getEffectivePrice = (product: Product): number => {
 export default function Products() {
   const [quantities, setQuantities] = useState<Record<number, number>>({});
   const [searchTerm, setSearchTerm] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [sortOption, setSortOption] = useState('default');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -61,6 +62,11 @@ export default function Products() {
       (getEffectivePrice(firstProduct) - getEffectivePrice(secondProduct)) * direction,
     );
   }
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    searchInputRef.current?.focus();
+  };
 
   const handleQuantityChange = (productId: number, change: number) => {
     setQuantities((prev) => ({
@@ -127,11 +133,12 @@ export default function Products() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
             <div className="relative flex-1">
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search products..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full px-4 py-2 ${darkMode ? 'bg-gray-800 text-light border-gray-700' : 'bg-white text-gray-800 border-gray-300'} rounded-lg border focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors duration-300`}
+                className={`w-full pl-4 pr-10 py-2 ${darkMode ? 'bg-gray-800 text-light border-gray-700' : 'bg-white text-gray-800 border-gray-300'} rounded-lg border focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors duration-300`}
                 aria-label="Search products"
               />
               <svg
@@ -146,6 +153,15 @@ export default function Products() {
                 <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
             </div>
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className={`shrink-0 px-4 py-2 rounded-lg border ${darkMode ? 'bg-gray-800 text-light border-gray-700 hover:bg-gray-700' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors duration-300`}
+              >
+                Clear search
+              </button>
+            )}
             <div className="sm:w-56">
               <label
                 htmlFor="product-sort"
@@ -166,6 +182,13 @@ export default function Products() {
               </select>
             </div>
           </div>
+
+          <p
+            aria-live="polite"
+            className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}
+          >
+            Showing {sortedProducts.length} of {products.length} products
+          </p>
 
           {/* Empty state when no products match */}
           {sortedProducts.length === 0 && (
