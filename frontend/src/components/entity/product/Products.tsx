@@ -21,9 +21,17 @@ const fetchProducts = async (): Promise<Product[]> => {
   return data;
 };
 
+const getEffectivePrice = (product: Product): number => {
+  const price = product.discount != null && product.discount > 0
+    ? product.price * (1 - product.discount)
+    : product.price;
+  return Number(price.toFixed(2));
+};
+
 export default function Products() {
   const [quantities, setQuantities] = useState<Record<number, number>>({});
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState('default');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showModal, setShowModal] = useState(false);
   const { data: products, isPending, error } = useQuery({ queryKey: ['products'], queryFn: fetchProducts });
@@ -40,6 +48,18 @@ export default function Products() {
     for (let i = filteredProducts.length - 1; i > 5; ++i) {
       filteredProducts[i].discount = 0;
     }
+  }
+
+  const sortedProducts = filteredProducts ? [...filteredProducts] : [];
+  if (sortOption === 'name-asc') {
+    sortedProducts.sort((firstProduct, secondProduct) =>
+      firstProduct.name.localeCompare(secondProduct.name, undefined, { sensitivity: 'base' }),
+    );
+  } else if (sortOption === 'price-asc' || sortOption === 'price-desc') {
+    const direction = sortOption === 'price-asc' ? 1 : -1;
+    sortedProducts.sort((firstProduct, secondProduct) =>
+      (getEffectivePrice(firstProduct) - getEffectivePrice(secondProduct)) * direction,
+    );
   }
 
   const handleQuantityChange = (productId: number, change: number) => {
@@ -104,30 +124,51 @@ export default function Products() {
             Products
           </h1>
 
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full px-4 py-2 ${darkMode ? 'bg-gray-800 text-light border-gray-700' : 'bg-white text-gray-800 border-gray-300'} rounded-lg border focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors duration-300`}
-              aria-label="Search products"
-            />
-            <svg
-              className={`absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${darkMode ? 'text-gray-400' : 'text-gray-500'} transition-colors duration-300`}
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={`w-full px-4 py-2 ${darkMode ? 'bg-gray-800 text-light border-gray-700' : 'bg-white text-gray-800 border-gray-300'} rounded-lg border focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors duration-300`}
+                aria-label="Search products"
+              />
+              <svg
+                className={`absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${darkMode ? 'text-gray-400' : 'text-gray-500'} transition-colors duration-300`}
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+            <div className="sm:w-56">
+              <label
+                htmlFor="product-sort"
+                className={`block mb-1 text-sm font-medium ${darkMode ? 'text-light' : 'text-gray-800'}`}
+              >
+                Sort by
+              </label>
+              <select
+                id="product-sort"
+                value={sortOption}
+                onChange={(event) => setSortOption(event.target.value)}
+                className={`w-full px-4 py-2 ${darkMode ? 'bg-gray-800 text-light border-gray-700' : 'bg-white text-gray-800 border-gray-300'} rounded-lg border focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors duration-300`}
+              >
+                <option value="default">Default</option>
+                <option value="name-asc">Name A-Z</option>
+                <option value="price-asc">Price Low-High</option>
+                <option value="price-desc">Price High-Low</option>
+              </select>
+            </div>
           </div>
 
           {/* Empty state when no products match */}
-          {(!filteredProducts || filteredProducts.length === 0) && (
+          {sortedProducts.length === 0 && (
             <div
               className={`flex flex-col items-center justify-center text-center py-20 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'
                 } shadow-sm border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}
@@ -155,7 +196,7 @@ export default function Products() {
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredProducts?.map((product) => {
+            {sortedProducts.map((product) => {
               const hasDiscount = product.discount != null && product.discount > 0;
               return (
                 <div
@@ -197,12 +238,12 @@ export default function Products() {
                             ${product.price.toFixed(2)}
                           </span>
                           <span className="text-primary text-xl font-bold">
-                            ${(product.price * (1 - product.discount!)).toFixed(2)}
+                            ${getEffectivePrice(product).toFixed(2)}
                           </span>
                         </div>
                       ) : (
                         <span className="text-primary text-xl font-bold">
-                          ${product.price.toFixed(2)}
+                          ${getEffectivePrice(product).toFixed(2)}
                         </span>
                       )}
                     </div>

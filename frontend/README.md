@@ -1,5 +1,24 @@
 # React + TypeScript + Vite
 
+## Storefront product sorting
+
+On `/products`, use **Sort by** to select **Default**, **Name A-Z**,
+**Price Low-High**, or **Price High-Low**. Sorting applies to the current
+name/description search without clearing it. Default restores API order.
+Price sorting uses the displayed two-decimal price, including positive
+discounts; ties keep their original API order. Sorting is local to the page
+and does not change cached products. The control supports light and dark themes.
+
+Run the component tests and production build from `frontend`:
+
+```powershell
+npm test
+npm run build
+```
+
+`npm test` runs Vitest component tests under `src` in jsdom, separately from
+the existing Playwright suite (`npm run test:e2e`).
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
