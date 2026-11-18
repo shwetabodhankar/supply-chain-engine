@@ -53,6 +53,85 @@ afterEach(() => {
   document.documentElement.classList.remove('light', 'dark');
 });
 
+describe('storefront product search controls', () => {
+  it.each([
+    ['FEEDER', ['Zulu Feeder', 'alpha Bowl', 'Beta Feeder']],
+    ['NAP', ['Delta Bed']],
+  ])('counts case-insensitive name and description matches for %s', async (searchTerm, expectedNames) => {
+    const { user } = renderProducts();
+
+    expect(screen.getByText('Showing 5 of 5 products')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Clear search' })).not.toBeInTheDocument();
+
+    await user.type(screen.getByRole('textbox', { name: 'Search products' }), searchTerm);
+
+    expect(productNames()).toEqual(expectedNames);
+    expect(screen.getByText(`Showing ${expectedNames.length} of 5 products`)).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Clear search' })).toBeVisible();
+  });
+
+  it.each(['light', 'dark'])('clears zero matches using the keyboard in the %s theme', async (theme) => {
+    const { user } = renderProducts(theme);
+    const searchControl = screen.getByRole('textbox', { name: 'Search products' });
+    await user.type(searchControl, 'no matching product');
+
+    expect(screen.getByText('Showing 0 of 5 products')).toBeVisible();
+    expect(screen.getByRole('status')).toHaveTextContent('No products found');
+    expect(productNames()).toEqual([]);
+
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Clear search' })).toHaveFocus();
+    await user.keyboard('{Enter}');
+
+    expect(searchControl).toHaveValue('');
+    expect(searchControl).toHaveFocus();
+    expect(screen.getByText('Showing 5 of 5 products')).toBeVisible();
+    expect(productNames()).toEqual(products.map((product) => product.name));
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Clear search' })).not.toBeInTheDocument();
+  });
+
+  it('clears only the search term while preserving sorting and selected quantities', async () => {
+    const { user } = renderProducts();
+    const searchControl = screen.getByRole('textbox', { name: 'Search products' });
+    const sortControl = screen.getByRole('combobox', { name: 'Sort by' });
+
+    await user.click(screen.getByRole('button', { name: 'Increase quantity of Zulu Feeder' }));
+    await user.selectOptions(sortControl, 'Name A-Z');
+    await user.type(searchControl, 'nap');
+    expect(screen.queryByRole('heading', { name: 'Zulu Feeder' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Clear search' }));
+
+    expect(searchControl).toHaveValue('');
+    expect(searchControl).toHaveFocus();
+    expect(sortControl).toHaveValue('name-asc');
+    expect(productNames()).toEqual([
+      'alpha Bowl', 'Beta Feeder', 'Delta Bed', 'Gamma Toy', 'Zulu Feeder',
+    ]);
+    expect(screen.getByLabelText('Quantity of Zulu Feeder')).toHaveTextContent('1');
+    expect(screen.getByRole('button', { name: 'Add 1 Zulu Feeder to cart' })).toBeEnabled();
+    expect(screen.getByText('Showing 5 of 5 products')).toBeVisible();
+  });
+
+  it('counts an empty catalog and clears a whitespace-only search', async () => {
+    const { user } = renderProducts('light', []);
+    const searchControl = screen.getByRole('textbox', { name: 'Search products' });
+
+    expect(screen.getByText('Showing 0 of 0 products')).toBeVisible();
+    expect(screen.getByRole('status')).toHaveTextContent('No products found');
+    expect(screen.queryByRole('button', { name: 'Clear search' })).not.toBeInTheDocument();
+
+    await user.type(searchControl, ' ');
+    await user.click(screen.getByRole('button', { name: 'Clear search' }));
+
+    expect(searchControl).toHaveValue('');
+    expect(searchControl).toHaveFocus();
+    expect(screen.getByText('Showing 0 of 0 products')).toBeVisible();
+    expect(screen.getByRole('status')).toHaveTextContent('No products found');
+  });
+});
+
 describe('storefront product sorting', () => {
   it('starts in API order and restores that order after sorting', async () => {
     const { user } = renderProducts();

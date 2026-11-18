@@ -1,5 +1,15 @@
 # React + TypeScript + Vite
 
+## Storefront product search
+
+On `/products`, **Showing X of Y products** reports the displayed results out of
+the loaded catalog, including zero matches. Search matches names and descriptions
+without regard to case. When the search is non-empty, **Clear search** resets only
+the search text and returns focus to the input, preserving sorting and selected
+quantities. The keyboard-accessible control remains available with no matches;
+the existing empty state is unchanged. The controls support light/dark themes
+and narrow screens.
+
 ## Storefront product sorting
 
 On `/products`, use **Sort by** to select **Default**, **Name A-Z**,
